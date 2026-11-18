@@ -1,7 +1,7 @@
 // 保险箱 · sw.js — keeps the app's own files on the phone so it opens offline.
 // It never touches vault data; it only serves these static files.
 // Bump CACHE when any file below changes.
-const CACHE = 'fv-1.0.0';
+const CACHE = 'fv-1.1.0';
 const FILES = [
   './', './index.html', './app.js', './crypto.js', './db.js', './style.css',
   './manifest.webmanifest',

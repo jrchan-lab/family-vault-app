@@ -10,7 +10,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="保险箱">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#1f5f5b">
+<meta name="theme-color" content="#F4F5FA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D0F1F" media="(prefers-color-scheme: dark)">
 <meta name="format-detection" content="telephone=no">
 <title>保险箱</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -20,165 +21,239 @@
 <script type="module" src="app.js"></script>
 </head>
 <body>
-<div id="cover" class="cover" hidden><div>🔒 保险箱</div></div>
+<div id="cover" class="cover" hidden><div class="dial dial-sm" data-dial></div></div>
 
-<main id="s-loading" class="screen center">
+<main id="s-loading" class="screen center-screen">
   <p class="muted">正在开…</p>
 </main>
 
 <!-- 第一次用：设定主密码 -->
 <main id="s-setup" class="screen" hidden>
-  <h1>🔒 保险箱</h1>
-  <p class="lead">第一次用，先设一个<b>主密码</b>。以后每次打开都要用它。</p>
-  <div class="warn">
-    <b>请记住：</b>忘记主密码，里面的资料就<b>永远拿不回来</b>，没有人可以帮你开。
-    建议把主密码写在纸上，收在家里安全的地方（不要拍照）。
+  <div class="hero">
+    <div class="dial" data-dial id="setup-dial"></div>
+    <h1 class="title-xl">保险箱</h1>
+    <p class="sub">先设一个主密码。以后每次打开都要用它。</p>
   </div>
-  <form id="f-setup" autocomplete="off">
-    <label for="setup-pw1">主密码（最少 8 个字）</label>
-    <input id="setup-pw1" type="password" autocomplete="new-password" minlength="8" required>
-    <label for="setup-pw2">再输入一次</label>
-    <input id="setup-pw2" type="password" autocomplete="new-password" minlength="8" required>
-    <label class="check"><input id="setup-ok" type="checkbox" required> 我明白：忘记主密码，资料就拿不回来</label>
+  <div class="callout">
+    <p><b>忘记主密码，资料就永远拿不回来。</b>没有人可以帮你开。</p>
+    <p>请把主密码写在纸上，收在家里安全的地方，不要拍照。</p>
+  </div>
+  <form id="f-setup" class="stack" autocomplete="off">
+    <label class="field">
+      <span class="field-label">主密码（最少 8 个字）</span>
+      <input id="setup-pw1" type="password" autocomplete="new-password" minlength="8" required>
+    </label>
+    <label class="field">
+      <span class="field-label">再输入一次</span>
+      <input id="setup-pw2" type="password" autocomplete="new-password" minlength="8" required>
+    </label>
+    <label class="check">
+      <input id="setup-ok" type="checkbox" required>
+      <span class="check-box" aria-hidden="true"></span>
+      <span>我明白：忘记主密码，资料就拿不回来</span>
+    </label>
     <p id="setup-err" class="err" role="alert"></p>
     <button class="btn primary" type="submit">开始使用</button>
   </form>
-  <hr>
-  <button id="setup-restore" class="btn" type="button">我有备份文件，要恢复资料</button>
+  <button id="setup-restore" class="btn quiet" type="button">我有备份文件，要恢复资料</button>
 </main>
 
 <!-- 锁住的画面 -->
 <main id="s-lock" class="screen" hidden>
-  <h1>🔒 保险箱</h1>
-  <p class="lead">请输入主密码</p>
-  <form id="f-lock" autocomplete="off">
-    <label for="lock-pw" class="sr">主密码</label>
-    <input id="lock-pw" type="password" autocomplete="current-password" required>
-    <p id="lock-err" class="err" role="alert"></p>
+  <div class="hero hero-lock">
+    <div class="dial" data-dial id="lock-dial"></div>
+    <h1 class="title-xl">保险箱</h1>
+    <p class="sub">输入主密码打开</p>
+  </div>
+  <form id="f-lock" class="stack" autocomplete="off">
+    <label class="field pw-field">
+      <span class="sr">主密码</span>
+      <input id="lock-pw" type="password" autocomplete="current-password" placeholder="主密码" required>
+      <button id="lock-eye" class="eye" type="button" aria-label="显示主密码" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </label>
+    <p id="lock-err" class="err center-text" role="alert"></p>
     <button id="lock-go" class="btn primary" type="submit">打开</button>
   </form>
-  <button id="lock-restore" class="btn" type="button" hidden>从备份恢复</button>
+  <button id="lock-restore" class="btn quiet" type="button" hidden>从备份恢复</button>
 </main>
 
 <!-- 资料列表 -->
-<main id="s-list" class="screen" hidden>
-  <header class="bar">
-    <button id="list-lock" class="btn small" type="button">🔒 锁上</button>
-    <span class="bar-title">保险箱</span>
-    <button id="list-settings" class="btn small" type="button">⚙️ 备份</button>
+<main id="s-list" class="screen screen-list" hidden>
+  <header class="list-head">
+    <div class="head-row">
+      <button id="list-lock" class="round" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        锁上
+      </button>
+      <button id="list-settings" class="round" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
+        备份
+      </button>
+    </div>
+    <h1 class="title-xl">保险箱</h1>
+    <p id="list-count" class="sub left"></p>
+    <label class="search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+      <span class="sr">找资料</span>
+      <input id="search" type="search" placeholder="找名字或号码" autocomplete="off" enterkeyhint="search">
+      <button id="search-clear" class="search-clear" type="button" aria-label="清除" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>
+      </button>
+    </label>
+    <div id="chips" class="chips" role="tablist" aria-label="类别"></div>
   </header>
-  <div id="backup-nag" class="nag" hidden>
-    <span>有新资料还没备份</span>
-    <button id="nag-go" class="btn small" type="button">去备份</button>
+
+  <button id="backup-nag" class="nag" type="button" hidden>
+    <span class="nag-dot" aria-hidden="true"></span>
+    <span class="nag-text">有新资料还没备份</span>
+    <span class="nag-go">去备份</span>
+  </button>
+
+  <ul id="list" class="group"></ul>
+  <div id="list-empty" class="empty" hidden>
+    <div class="dial dial-sm" data-dial></div>
+    <p class="empty-title">还没有资料</p>
+    <p class="muted">按下面的「新增」，放第一项。</p>
   </div>
-  <label for="search" class="sr">找资料</label>
-  <input id="search" type="search" placeholder="🔍 找资料（打名字或号码）" autocomplete="off" enterkeyhint="search">
-  <ul id="list" class="list"></ul>
-  <p id="list-empty" class="muted center-text" hidden>还没有资料。按下面的「＋ 新增」开始。</p>
-  <p id="list-none" class="muted center-text" hidden>找不到。试试别的字？</p>
-  <div class="spacer"></div>
-  <button id="list-add" class="btn primary fab" type="button">＋ 新增</button>
+  <p id="list-none" class="empty muted" hidden></p>
+  <p id="list-hint" class="hint" hidden>向左滑可以复制、删除。按住不放有更多选择。</p>
+  <div class="dock">
+    <button id="list-add" class="btn primary add" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      新增
+    </button>
+  </div>
 </main>
+
+<div id="scrim" class="scrim" hidden></div>
 
 <!-- 新增 / 修改 -->
-<main id="s-edit" class="screen" hidden>
-  <header class="bar">
-    <button id="edit-back" class="btn small" type="button">‹ 返回</button>
-    <span id="edit-heading" class="bar-title">新增</span>
-    <span class="bar-gap"></span>
+<section id="sheet-edit" class="sheet" role="dialog" aria-modal="true" aria-labelledby="edit-heading" hidden>
+  <div class="sheet-grab" aria-hidden="true"></div>
+  <header class="sheet-head">
+    <button class="link" type="button" data-close>取消</button>
+    <h2 id="edit-heading">新增</h2>
+    <span class="link-gap"></span>
   </header>
-  <div class="note">第一阶段：只放一般资料（会员卡、生日、地址）。<b>不要放密码、银行资料。</b></div>
-  <form id="f-edit" autocomplete="off">
-    <label for="edit-cat">类别</label>
-    <select id="edit-cat">
-      <option value="会员卡">会员卡</option>
-      <option value="生日">生日</option>
-      <option value="地址">地址</option>
-      <option value="电话">电话</option>
-      <option value="其他">其他</option>
-    </select>
-    <label for="edit-title">名字（例如：Watsons 会员卡）</label>
-    <input id="edit-title" type="text" maxlength="100" required autocomplete="off" autocapitalize="sentences">
-    <label for="edit-body">内容（例如：卡号、日期、地址）</label>
-    <textarea id="edit-body" rows="6" maxlength="5000" autocomplete="off"></textarea>
+  <form id="f-edit" class="sheet-body stack" autocomplete="off">
+    <p class="note">现在只放一般资料。<b>不要放密码、银行资料。</b></p>
+    <fieldset class="cat-pick">
+      <legend class="field-label">类别</legend>
+      <div id="edit-cats" class="cat-grid"></div>
+    </fieldset>
+    <label class="field">
+      <span class="field-label">名字</span>
+      <input id="edit-title" type="text" maxlength="100" required autocomplete="off" autocapitalize="sentences" placeholder="例如：Watsons 会员卡">
+    </label>
+    <label class="field">
+      <span class="field-label">内容</span>
+      <textarea id="edit-body" rows="5" maxlength="5000" autocomplete="off" placeholder="卡号、日期、地址…"></textarea>
+    </label>
     <p id="edit-err" class="err" role="alert"></p>
-    <button class="btn primary" type="submit">💾 保存</button>
+    <button class="btn primary" type="submit">保存</button>
+    <div id="edit-extra" class="row-2" hidden>
+      <button id="edit-copy" class="btn soft" type="button">复制内容</button>
+      <button id="edit-delete" class="btn soft danger" type="button">删除</button>
+    </div>
   </form>
-  <button id="edit-copy" class="btn" type="button" hidden>📋 复制内容</button>
-  <button id="edit-delete" class="btn danger" type="button" hidden>🗑️ 删除这一项</button>
-</main>
+</section>
 
-<!-- 备份 / 设定 -->
-<main id="s-settings" class="screen" hidden>
-  <header class="bar">
-    <button id="set-back" class="btn small" type="button">‹ 返回</button>
-    <span class="bar-title">备份</span>
-    <span class="bar-gap"></span>
+<!-- 备份 -->
+<section id="sheet-settings" class="sheet short" role="dialog" aria-modal="true" aria-labelledby="set-heading" hidden>
+  <div class="sheet-grab" aria-hidden="true"></div>
+  <header class="sheet-head">
+    <span class="link-gap"></span>
+    <h2 id="set-heading">备份</h2>
+    <button class="link strong" type="button" data-close>好了</button>
   </header>
-  <section class="card">
-    <h2>📤 做备份</h2>
-    <p>备份文件是<b>加密的</b>，要用主密码才能打开。可以放进 Google Drive。</p>
-    <p id="set-last" class="muted"></p>
-    <button id="set-export" class="btn primary" type="button">做备份文件</button>
-  </section>
-  <section class="card">
-    <h2>📥 从备份恢复</h2>
-    <p>用备份文件把资料拿回来。<b>现在手机里的资料会被备份里的资料换掉。</b></p>
-    <button id="set-restore" class="btn" type="button">从备份恢复</button>
-  </section>
-  <section class="card">
-    <h2>🔑 换主密码</h2>
-    <button id="set-changepw" class="btn" type="button">换主密码</button>
-  </section>
-  <p class="muted center-text">没有动 1 分钟会自动锁上。<br>版本 <span id="app-version"></span></p>
-</main>
+  <div class="sheet-body">
+    <p class="sheet-lead">备份文件是加密的，要用主密码才能打开。可以放进 Google Drive。</p>
+    <ul class="group">
+      <li><button id="set-export" class="cell" type="button">
+        <span class="tile t-indigo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg></span>
+        <span class="cell-text"><span class="cell-title">做备份文件</span><span id="set-last" class="cell-sub"></span></span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </button></li>
+      <li><button id="set-restore" class="cell" type="button">
+        <span class="tile t-teal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M8 11l4 4 4-4M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg></span>
+        <span class="cell-text"><span class="cell-title">从备份恢复</span><span class="cell-sub">手机里的资料会换成备份的</span></span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </button></li>
+      <li><button id="set-changepw" class="cell" type="button">
+        <span class="tile t-brass"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M11 12l8-8M16 7l2 2M14 9l2 2"/></svg></span>
+        <span class="cell-text"><span class="cell-title">换主密码</span></span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </button></li>
+    </ul>
+    <p class="foot">1 分钟没有动会自动锁上。版本 <span id="app-version"></span></p>
+  </div>
+</section>
 
 <!-- 恢复备份 -->
-<main id="s-restore" class="screen" hidden>
-  <header class="bar">
-    <button id="res-back" class="btn small" type="button">‹ 返回</button>
-    <span class="bar-title">恢复备份</span>
-    <span class="bar-gap"></span>
+<section id="sheet-restore" class="sheet" role="dialog" aria-modal="true" aria-labelledby="res-heading" hidden>
+  <div class="sheet-grab" aria-hidden="true"></div>
+  <header class="sheet-head">
+    <button class="link" type="button" data-close>取消</button>
+    <h2 id="res-heading">恢复备份</h2>
+    <span class="link-gap"></span>
   </header>
-  <form id="f-restore" autocomplete="off">
-    <label for="res-file">1. 选备份文件</label>
-    <input id="res-file" type="file" required>
-    <label for="res-pw">2. 输入<b>做备份时</b>的主密码</label>
-    <input id="res-pw" type="password" autocomplete="off" required>
-    <p class="muted">恢复后，主密码就是这个备份的主密码。</p>
+  <form id="f-restore" class="sheet-body stack" autocomplete="off">
+    <label class="file-pick">
+      <input id="res-file" type="file" required>
+      <span class="tile t-teal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z M14 3v5h5"/></svg></span>
+      <span class="cell-text"><span class="cell-title">选备份文件</span><span id="res-file-name" class="cell-sub">在 Google Drive 或「文件」里找</span></span>
+    </label>
+    <label class="field">
+      <span class="field-label">做备份时的主密码</span>
+      <input id="res-pw" type="password" autocomplete="off" required>
+    </label>
+    <p class="muted small">恢复后，主密码就是这个备份的主密码。</p>
     <p id="res-err" class="err" role="alert"></p>
     <button id="res-go" class="btn primary" type="submit">恢复</button>
   </form>
-</main>
+</section>
 
 <!-- 换主密码 -->
-<main id="s-changepw" class="screen" hidden>
-  <header class="bar">
-    <button id="cp-back" class="btn small" type="button">‹ 返回</button>
-    <span class="bar-title">换主密码</span>
-    <span class="bar-gap"></span>
+<section id="sheet-changepw" class="sheet" role="dialog" aria-modal="true" aria-labelledby="cp-heading" hidden>
+  <div class="sheet-grab" aria-hidden="true"></div>
+  <header class="sheet-head">
+    <button class="link" type="button" data-close>取消</button>
+    <h2 id="cp-heading">换主密码</h2>
+    <span class="link-gap"></span>
   </header>
-  <form id="f-changepw" autocomplete="off">
-    <label for="cp-old">现在的主密码</label>
-    <input id="cp-old" type="password" autocomplete="current-password" required>
-    <label for="cp-new1">新的主密码（最少 8 个字）</label>
-    <input id="cp-new1" type="password" autocomplete="new-password" minlength="8" required>
-    <label for="cp-new2">新的主密码，再输入一次</label>
-    <input id="cp-new2" type="password" autocomplete="new-password" minlength="8" required>
-    <div class="warn">换了之后，<b>旧的备份文件还是要用旧的主密码</b>才能打开。换好后请马上做一个新备份。</div>
+  <form id="f-changepw" class="sheet-body stack" autocomplete="off">
+    <label class="field">
+      <span class="field-label">现在的主密码</span>
+      <input id="cp-old" type="password" autocomplete="current-password" required>
+    </label>
+    <label class="field">
+      <span class="field-label">新的主密码（最少 8 个字）</span>
+      <input id="cp-new1" type="password" autocomplete="new-password" minlength="8" required>
+    </label>
+    <label class="field">
+      <span class="field-label">新的主密码，再输入一次</span>
+      <input id="cp-new2" type="password" autocomplete="new-password" minlength="8" required>
+    </label>
+    <p class="callout small">换了之后，旧的备份文件还是要用<b>旧的</b>主密码打开。换好请马上做一个新备份。</p>
     <p id="cp-err" class="err" role="alert"></p>
-    <button id="cp-go" class="btn primary" type="submit">换</button>
+    <button id="cp-go" class="btn primary" type="submit">换主密码</button>
   </form>
-</main>
+</section>
 
-<dialog id="confirm">
-  <p id="confirm-text"></p>
-  <div class="row">
-    <button id="confirm-no" class="btn" type="button">不要</button>
-    <button id="confirm-yes" class="btn danger" type="button">是的</button>
+<!-- 选项 / 确认 -->
+<div id="action-sheet" class="action-sheet" role="dialog" aria-modal="true" hidden>
+  <div class="as-group">
+    <p id="as-title" class="as-title"></p>
+    <div id="as-buttons"></div>
   </div>
-</dialog>
+  <button id="as-cancel" class="as-cancel" type="button">取消</button>
+</div>
 
-<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+  <span id="toast-text"></span>
+</div>
 </body>
 </html>
